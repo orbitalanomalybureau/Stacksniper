@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "backend",
+      "runtimeExecutable": "/bin/bash",
+      "runtimeArgs": ["-c", "cd /tmp/stacksniper_backend && USE_SQLITE_MEMORY=true python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000"],
+      "port": 8000
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "urls": {
+    "frontend": "https://stacksniper.com",
+    "api": "https://api.stacksniper.com",
+    "github": "https://github.com/orbitalanomalybureau/stacksniper"
+  },
+  "stripe_prices": {
+    "basic": "price_1T9fOwK9k5ZdU2JowT2N6HYE",
+    "premium": "price_1T9fOyK9k5ZdU2JodniNSYJ7",
+    "enterprise": "price_1T9fP0K9k5ZdU2JobIlOfRO9"
+  },
+  "render_ids": {
+    "api": "",
+    "worker": "",
+    "static": ""
+  },
+  "render_db_id": "",
+  "note": "Secrets masked. Actual values are in your .env and Render dashboard."
+}

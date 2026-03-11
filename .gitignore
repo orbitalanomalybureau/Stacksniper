@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+frontend/public/bundle.js
+frontend/public/bundle.js.map
+frontend/public/styles.css
+
+# Environment
+.env
+
+# Database migrations (auto-generated)
+alembic/versions/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+*.log
