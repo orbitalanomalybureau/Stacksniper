@@ -520,30 +520,35 @@ def setup_render(config):
 
     ensure_service("stacksniper-api", "web_service", {
         "env": "docker",
+        "envSpecificDetails": {
+            "dockerContext": "./backend",
+            "dockerfilePath": "./backend/Dockerfile",
+        },
         "plan": "free",
         "region": "oregon",
         "repo": f"https://github.com/{gh_owner}/{gh_repo}",
         "branch": "main",
-        "rootDir": "backend",
-        "dockerfilePath": "./Dockerfile",
         "healthCheckPath": "/health",
+        "numInstances": 1,
     })
     ensure_service("stacksniper-worker", "background_worker", {
         "env": "docker",
+        "envSpecificDetails": {
+            "dockerContext": "./backend",
+            "dockerfilePath": "./backend/Dockerfile",
+            "dockerCommand": "celery -A app.tasks.celery_app worker --loglevel=info",
+        },
         "plan": "free",
         "region": "oregon",
         "repo": f"https://github.com/{gh_owner}/{gh_repo}",
         "branch": "main",
-        "rootDir": "backend",
-        "dockerfilePath": "./Dockerfile",
-        "dockerCommand": "celery -A app.tasks.celery_app worker --loglevel=info",
+        "numInstances": 1,
     })
     ensure_service("stacksniper-web", "static_site", {
-        "buildCommand": "npm install && npm run build",
-        "publishPath": "public",
+        "buildCommand": "cd frontend && npm install && npm run build",
+        "publishPath": "frontend/public",
         "repo": f"https://github.com/{gh_owner}/{gh_repo}",
         "branch": "main",
-        "rootDir": "frontend",
         "routes": [{"type": "rewrite", "source": "/*", "destination": "/index.html"}],
     })
 
