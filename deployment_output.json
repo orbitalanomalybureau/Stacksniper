@@ -12,8 +12,8 @@
   "render_ids": {
     "api": "",
     "worker": "",
-    "static": ""
+    "static": "srv-d6ofuvfafjfc738605bg"
   },
-  "render_db_id": "",
+  "render_db_id": "dpg-d6n16dftskes73e6d6qg-a",
   "note": "Secrets masked. Actual values are in your .env and Render dashboard."
 }

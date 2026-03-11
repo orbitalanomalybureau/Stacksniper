@@ -491,7 +491,11 @@ def setup_render(config):
         log_warn("Redis not found — update REDIS_URL after creating")
 
     # --- Helper to create or find a service ---
-    def ensure_service(name, svc_type, extra):
+    # Render v1 API requires serviceDetails wrapper for non-static services
+    gh_owner = config["GITHUB_OWNER"]
+    gh_repo = config["GITHUB_REPO"]
+
+    def ensure_service(name, svc_type, service_details):
         gen_key = {"stacksniper-api": "RENDER_API_SERVICE_ID",
                    "stacksniper-worker": "RENDER_WORKER_SERVICE_ID",
                    "stacksniper-web": "RENDER_STATIC_SERVICE_ID"}[name]
@@ -501,13 +505,13 @@ def setup_render(config):
             return
         log(f"Creating {name}...")
         try:
-            base = {
-                "name": name, "ownerId": owner_id,
-                "repo": f"https://github.com/{owner}/{repo}",
-                "branch": "main", "region": "oregon", "envVars": [],
+            payload = {
+                "name": name,
+                "ownerId": owner_id,
+                "type": svc_type,
+                "serviceDetails": service_details,
             }
-            base.update(extra)
-            resp = api_request("https://api.render.com/v1/services", method="POST", headers=headers, data=base)
+            resp = api_request("https://api.render.com/v1/services", method="POST", headers=headers, data=payload)
             GENERATED[gen_key] = resp["service"]["id"]
             log_success(f"Created: {resp['service']['id']}")
         except Exception as e:
@@ -515,17 +519,31 @@ def setup_render(config):
             log_warn("May need to connect GitHub to Render in dashboard first.")
 
     ensure_service("stacksniper-api", "web_service", {
-        "type": "web_service", "rootDir": "backend", "runtime": "docker",
-        "plan": "free", "dockerfilePath": "./Dockerfile", "healthCheckPath": "/health",
+        "env": "docker",
+        "plan": "free",
+        "region": "oregon",
+        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
+        "branch": "main",
+        "rootDir": "backend",
+        "dockerfilePath": "./Dockerfile",
+        "healthCheckPath": "/health",
     })
     ensure_service("stacksniper-worker", "background_worker", {
-        "type": "background_worker", "rootDir": "backend", "runtime": "docker",
-        "plan": "free", "dockerfilePath": "./Dockerfile",
+        "env": "docker",
+        "plan": "free",
+        "region": "oregon",
+        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
+        "branch": "main",
+        "rootDir": "backend",
+        "dockerfilePath": "./Dockerfile",
         "dockerCommand": "celery -A app.tasks.celery_app worker --loglevel=info",
     })
     ensure_service("stacksniper-web", "static_site", {
-        "type": "static_site", "rootDir": "frontend",
-        "buildCommand": "npm install && npm run build", "publishPath": "public",
+        "buildCommand": "npm install && npm run build",
+        "publishPath": "public",
+        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
+        "branch": "main",
+        "rootDir": "frontend",
         "routes": [{"type": "rewrite", "source": "/*", "destination": "/index.html"}],
     })
 
