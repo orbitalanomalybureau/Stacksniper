@@ -505,18 +505,24 @@ def setup_render(config):
             return
         log(f"Creating {name}...")
         try:
+            # Render API requires 'repo' at top level, not inside serviceDetails
             payload = {
                 "name": name,
                 "ownerId": owner_id,
                 "type": svc_type,
+                "repo": f"https://github.com/{gh_owner}/{gh_repo}",
                 "serviceDetails": service_details,
             }
             resp = api_request("https://api.render.com/v1/services", method="POST", headers=headers, data=payload)
             GENERATED[gen_key] = resp["service"]["id"]
             log_success(f"Created: {resp['service']['id']}")
-        except Exception as e:
-            log_error(f"Failed: {e}")
-            log_warn("May need to connect GitHub to Render in dashboard first.")
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8") if e.fp else ""
+            log_error(f"Failed: {error_body[:200]}")
+            if "only web services allowed" in error_body.lower():
+                log_warn(f"  {name}: Free plan only supports web services — upgrade or skip")
+            else:
+                log_warn("May need to connect GitHub to Render in dashboard first.")
 
     ensure_service("stacksniper-api", "web_service", {
         "env": "docker",
@@ -526,8 +532,6 @@ def setup_render(config):
         },
         "plan": "free",
         "region": "oregon",
-        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
-        "branch": "main",
         "healthCheckPath": "/health",
         "numInstances": 1,
     })
@@ -538,17 +542,13 @@ def setup_render(config):
             "dockerfilePath": "./backend/Dockerfile",
             "dockerCommand": "celery -A app.tasks.celery_app worker --loglevel=info",
         },
-        "plan": "free",
+        "plan": "starter",
         "region": "oregon",
-        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
-        "branch": "main",
         "numInstances": 1,
     })
     ensure_service("stacksniper-web", "static_site", {
         "buildCommand": "cd frontend && npm install && npm run build",
         "publishPath": "frontend/public",
-        "repo": f"https://github.com/{gh_owner}/{gh_repo}",
-        "branch": "main",
         "routes": [{"type": "rewrite", "source": "/*", "destination": "/index.html"}],
     })
 
