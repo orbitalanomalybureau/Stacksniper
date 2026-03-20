@@ -61,7 +61,7 @@ class NFLDataService:
         return None
 
     async def _fetch_players_from_api(self, season: int, week: int) -> List[Dict]:
-        raw = await self._api_get(f"scores/json/Players")
+        raw = await self._api_get("scores/json/Players")
         if not raw:
             logger.warning("Falling back to mock data")
             return self._load_mock_players(season, week)

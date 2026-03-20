@@ -51,7 +51,6 @@ class Simulator:
         if not players:
             return {"players": [], "lineup_scores": [], "stacks": []}
 
-        n = len(players)
         corr = self._build_correlation_matrix(players)
 
         # Generate correlated samples: (num_sims, n_players)

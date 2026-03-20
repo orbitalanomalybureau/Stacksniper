@@ -52,9 +52,12 @@ jobs:
         working-directory: backend
         run: pip install -r requirements.txt
 
-      - name: Lint with ruff
+      - name: Lint backend with ruff
         working-directory: backend
         run: ruff check .
+
+      - name: Lint MLB engine with ruff
+        run: ruff check sports/ --select F
 
       - name: Run tests
         working-directory: backend

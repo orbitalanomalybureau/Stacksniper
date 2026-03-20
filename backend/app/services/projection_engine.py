@@ -106,9 +106,6 @@ class ProjectionEngine:
         projected = round(base_pts, 1)
         std_dev = round((ceiling - floor) / 4, 2)
 
-        salary = pdata.get("salary") or 5000
-        ownership = round(min(35, max(1, (salary / 9000) * 25 + random.uniform(-3, 3))), 1)
-
         return Projection(
             player_id=player_id,
             season=season,
