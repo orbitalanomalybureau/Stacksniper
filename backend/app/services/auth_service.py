@@ -23,11 +23,9 @@ class AuthService:
         existing = await self.db.execute(select(User).where(User.email == data.email))
         if existing.scalar_one_or_none():
             return None
-        # Truncate to bcrypt's 72-byte limit
-        safe_password = data.password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
         user = User(
             email=data.email,
-            hashed_password=pwd_context.hash(safe_password),
+            hashed_password=pwd_context.hash(data.password),
             display_name=data.display_name,
             trial_expires_at=datetime.now(timezone.utc) + timedelta(days=7),
         )
@@ -49,9 +47,7 @@ class AuthService:
     async def login(self, data: UserLogin) -> Optional[Tuple[User, str, str]]:
         result = await self.db.execute(select(User).where(User.email == data.email))
         user = result.scalar_one_or_none()
-        # Truncate to bcrypt's 72-byte limit
-        safe_password = data.password.encode("utf-8")[:72].decode("utf-8", errors="ignore")
-        if not user or not pwd_context.verify(safe_password, user.hashed_password):
+        if not user or not pwd_context.verify(data.password, user.hashed_password):
             return None
         access_token = self._create_token(
             str(user.id),
