@@ -1,5 +1,4 @@
 import numpy as np
-import pytest
 
 from app.services.projection_engine import ProjectionEngine
 from app.services.simulator import Simulator

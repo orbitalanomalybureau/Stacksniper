@@ -6,8 +6,6 @@ os.environ["USE_SQLITE_MEMORY"] = "true"
 
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy import select
-
 from app.database import async_session, engine
 from app.models.user import Base, User
 from app.services.auth_service import AuthService, pwd_context

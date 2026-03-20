@@ -4,7 +4,7 @@ import time
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -16,7 +16,7 @@ from app.middleware.error_handler import http_exception_handler, unhandled_excep
 from app.middleware.rate_limit import limiter
 from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
-from app.routers import auth, billing, lineups, projections, simulations
+from app.routers import auth, billing, lineups, mlb, projections, simulations
 
 _start_time = time.monotonic()
 
@@ -38,8 +38,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Stack Sniper DFS",
-    version="0.1.0",
-    description="NFL DFS projections and simulation platform",
+    version="1.0.0",
+    description="Multi-sport DFS projections and simulation platform (MLB + NFL)",
     lifespan=lifespan,
 )
 
@@ -60,10 +60,16 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(projections.router, prefix="/api/projections", tags=["projections"])
-app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"])
-app.include_router(lineups.router, prefix="/api/lineups", tags=["lineups"])
+app.include_router(projections.router, prefix="/api/nfl/projections", tags=["nfl-projections"])
+app.include_router(simulations.router, prefix="/api/nfl/simulations", tags=["nfl-simulations"])
+app.include_router(lineups.router, prefix="/api/nfl/lineups", tags=["nfl-lineups"])
+app.include_router(mlb.router, prefix="/api/mlb", tags=["mlb"])
 app.include_router(billing.router, prefix="/api/billing", tags=["billing"])
+
+# Backward compat: keep old NFL routes working without /nfl/ prefix
+app.include_router(projections.router, prefix="/api/projections", tags=["projections"], include_in_schema=False)
+app.include_router(simulations.router, prefix="/api/simulations", tags=["simulations"], include_in_schema=False)
+app.include_router(lineups.router, prefix="/api/lineups", tags=["lineups"], include_in_schema=False)
 
 
 @app.get("/health")

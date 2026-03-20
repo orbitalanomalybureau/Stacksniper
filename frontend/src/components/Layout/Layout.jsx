@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { BarChart3, Cpu, ListOrdered, CreditCard, LogOut, Menu, X, LayoutDashboard } from "lucide-react";
+import { useSport } from "../../context/SportContext";
+import { BarChart3, Cpu, ListOrdered, CreditCard, LogOut, Menu, X, LayoutDashboard, Repeat } from "lucide-react";
 import Logo, { TextLogo } from "../Logo";
 
 const TIER_STYLES = {
@@ -10,7 +11,34 @@ const TIER_STYLES = {
   free: "badge-free",
 };
 
-const MOBILE_TABS = [
+function SportSwitcher() {
+  const { sport, setSport, SPORTS } = useSport();
+
+  return (
+    <div className="flex items-center bg-surface rounded-full border border-border p-0.5 gap-0.5">
+      {Object.values(SPORTS).map((s) => (
+        <button
+          key={s.key}
+          onClick={() => setSport(s.key)}
+          className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wider transition-all ${
+            sport === s.key
+              ? "bg-venom/20 text-venom border border-venom/30"
+              : "text-text-muted hover:text-text-secondary border border-transparent"
+          }`}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const MLB_TABS = [
+  { to: "/mlb", icon: LayoutDashboard, label: "MLB" },
+  { to: "/pricing", icon: CreditCard, label: "Plans" },
+];
+
+const NFL_TABS = [
   { to: "/dashboard", icon: LayoutDashboard, label: "Home" },
   { to: "/projections", icon: BarChart3, label: "Projections" },
   { to: "/simulator", icon: Cpu, label: "Sims" },
@@ -18,7 +46,7 @@ const MOBILE_TABS = [
   { to: "/pricing", icon: CreditCard, label: "Plans" },
 ];
 
-function NavLinks({ user, logout, onClick }) {
+function NavLinks({ user, logout, onClick, sport }) {
   const location = useLocation();
 
   const linkClass = (path) =>
@@ -30,18 +58,28 @@ function NavLinks({ user, logout, onClick }) {
 
   return (
     <>
-      <Link to="/dashboard" onClick={onClick} className={linkClass("/dashboard")}>
-        <LayoutDashboard className="w-4 h-4" /> Dashboard
-      </Link>
-      <Link to="/projections" onClick={onClick} className={linkClass("/projections")}>
-        <BarChart3 className="w-4 h-4" /> Projections
-      </Link>
-      <Link to="/simulator" onClick={onClick} className={linkClass("/simulator")}>
-        <Cpu className="w-4 h-4" /> Simulator
-      </Link>
-      <Link to="/lineups" onClick={onClick} className={linkClass("/lineups")}>
-        <ListOrdered className="w-4 h-4" /> Lineups
-      </Link>
+      {sport === "mlb" ? (
+        <>
+          <Link to="/mlb" onClick={onClick} className={linkClass("/mlb")}>
+            <LayoutDashboard className="w-4 h-4" /> MLB Dashboard
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link to="/dashboard" onClick={onClick} className={linkClass("/dashboard")}>
+            <LayoutDashboard className="w-4 h-4" /> Dashboard
+          </Link>
+          <Link to="/projections" onClick={onClick} className={linkClass("/projections")}>
+            <BarChart3 className="w-4 h-4" /> Projections
+          </Link>
+          <Link to="/simulator" onClick={onClick} className={linkClass("/simulator")}>
+            <Cpu className="w-4 h-4" /> Simulator
+          </Link>
+          <Link to="/lineups" onClick={onClick} className={linkClass("/lineups")}>
+            <ListOrdered className="w-4 h-4" /> Lineups
+          </Link>
+        </>
+      )}
       <Link to="/pricing" onClick={onClick} className={linkClass("/pricing")}>
         <CreditCard className="w-4 h-4" /> Pricing
       </Link>
@@ -58,12 +96,14 @@ function NavLinks({ user, logout, onClick }) {
   );
 }
 
-function MobileTabBar() {
+function MobileTabBar({ sport }) {
   const location = useLocation();
+  const tabs = sport === "mlb" ? MLB_TABS : NFL_TABS;
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-t border-border">
       <div className="flex justify-around py-2">
-        {MOBILE_TABS.map(({ to, icon: Icon, label }) => {
+        {tabs.map(({ to, icon: Icon, label }) => {
           const active = location.pathname === to;
           return (
             <Link
@@ -85,21 +125,25 @@ function MobileTabBar() {
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { sport } = useSport();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-grid">
       <header className="border-b border-border bg-primary/80 backdrop-blur-md sticky top-0 z-50">
         <nav className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2.5">
-            <Logo size={32} />
-            <TextLogo className="text-lg" />
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-2.5">
+              <Logo size={32} />
+              <TextLogo className="text-lg" />
+            </Link>
+            {user && <SportSwitcher />}
+          </div>
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-6">
             {user ? (
-              <NavLinks user={user} logout={logout} />
+              <NavLinks user={user} logout={logout} sport={sport} />
             ) : (
               <>
                 <Link to="/login" className="text-text-secondary hover:text-venom transition-colors text-sm">
@@ -125,7 +169,12 @@ export default function Layout() {
         {mobileOpen && (
           <div className="md:hidden border-t border-border bg-primary/95 backdrop-blur-md px-4 pb-4 pt-2 space-y-3 flex flex-col animate-fade-in">
             {user ? (
-              <NavLinks user={user} logout={logout} onClick={() => setMobileOpen(false)} />
+              <>
+                <div className="pb-2">
+                  <SportSwitcher />
+                </div>
+                <NavLinks user={user} logout={logout} onClick={() => setMobileOpen(false)} sport={sport} />
+              </>
             ) : (
               <>
                 <Link to="/login" onClick={() => setMobileOpen(false)} className="text-text-secondary hover:text-venom transition-colors">
@@ -145,7 +194,7 @@ export default function Layout() {
       </main>
 
       {/* Mobile bottom tab bar */}
-      {user && <MobileTabBar />}
+      {user && <MobileTabBar sport={sport} />}
 
       {/* Desktop footer */}
       <footer className="border-t border-border py-8 mt-auto hidden md:block">

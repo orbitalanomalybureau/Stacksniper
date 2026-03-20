@@ -1,9 +1,6 @@
 """Integration tests for simulation and lineup API endpoints."""
 from __future__ import annotations
 
-import pytest
-
-
 async def test_create_simulation_requires_auth(client):
     resp = await client.post("/api/simulations/", json={"season": 2025, "week": 1})
     assert resp.status_code == 401
